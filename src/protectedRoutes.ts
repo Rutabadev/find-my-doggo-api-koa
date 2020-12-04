@@ -4,6 +4,7 @@ import { user } from './controller';
 const protectedRouter = new SwaggerRouter();
 
 // USER ROUTES
+protectedRouter.get('/users/me', user.getMe);
 protectedRouter.get('/users', user.getUsers);
 protectedRouter.get('/users/:id', user.getUser);
 protectedRouter.post('/users', user.createUser);

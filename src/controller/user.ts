@@ -9,8 +9,10 @@ import {
    responsesAll,
    tagsAll,
 } from 'koa-swagger-decorator';
-import { User, userSchema } from '../entity/user';
+import { User, userSchema, loginSchema } from '../entity/user';
 import { ParamError } from '../types';
+import jsonWebToken from 'jsonwebtoken';
+import { config } from '../config';
 
 @responsesAll({
    200: { description: 'success' },
@@ -19,6 +21,48 @@ import { ParamError } from '../types';
 })
 @tagsAll(['User'])
 export default class UserController {
+   @request('post', '/users/login')
+   @summary('Login a user')
+   @body(loginSchema)
+   public static async login(ctx: BaseContext): Promise<void> {
+      const errors: ParamError[] = [];
+      const usernameOrEmail = ctx?.request?.body.usernameOrEmail;
+      if (!usernameOrEmail) {
+         errors.push({
+            field: 'usernameOrEmail',
+            message: 'usernameOrEmail is required',
+         });
+      }
+
+      if (errors.length) {
+         ctx.status = 400;
+         ctx.body = { errors };
+         return;
+      }
+
+      const userRepository = getManager().getRepository(User);
+      const user = await userRepository.findOne({
+         where: [{ name: usernameOrEmail }, { email: usernameOrEmail }],
+      });
+
+      if (!user) {
+         return;
+      }
+
+      const jwt = jsonWebToken.sign({ uid: user.id }, config.jwtSecret);
+      ctx.status = 200;
+      ctx.body = { user, jwt };
+   }
+
+   @request('get', '/users/me')
+   @summary('Get the currently logged in user info')
+   public static async getMe(ctx: BaseContext): Promise<void> {
+      const jwt = ctx.request.header.authorization.match(/Bearer (.*)/)[1];
+      const uid = (jsonWebToken.decode(jwt) as any).uid;
+      const userRepository: Repository<User> = getManager().getRepository(User);
+      ctx.body = await userRepository.findOne(uid);
+   }
+
    @request('get', '/users')
    @summary('Find all users')
    public static async getUsers(ctx: BaseContext): Promise<void> {

@@ -39,3 +39,11 @@ export const userSchema = {
       example: 'aL0ngP@ssword!',
    },
 };
+
+export const loginSchema = {
+   usernameOrEmail: {
+      type: 'string',
+      required: true,
+      example: 'Gilles Poitou',
+   },
+};
