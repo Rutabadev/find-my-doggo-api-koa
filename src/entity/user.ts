@@ -1,27 +1,41 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
-import { Length, IsEmail } from "class-validator";
+import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Length, IsEmail } from 'class-validator';
 
 @Entity()
+@Unique(['name'])
+@Unique(['email'])
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+   @PrimaryGeneratedColumn()
+   id: number;
 
-    @Column({
-        length: 80
-    })
-    @Length(10, 80)
-    name: string;
+   @Column({
+      length: 80,
+   })
+   @Length(1, 80)
+   name: string;
 
-    @Column({
-        length: 100
-    })
-    @Length(10, 100)
-    @IsEmail()
-    email: string;
+   @Column({
+      length: 100,
+      nullable: true,
+   })
+   @Length(10, 100)
+   @IsEmail()
+   email: string;
+
+   @Column()
+   @Length(5, 80)
+   password: string;
 }
 
 export const userSchema = {
-    id: { type: "number", required: true, example: 1 },
-    name: { type: "string", required: true, example: "Javier" },
-    email: { type: "string", required: true, example: "avileslopez.javier@gmail.com" }
+   name: { type: 'string', required: true, example: 'Gilles Poitou' },
+   email: {
+      type: 'string',
+      example: 'gilles.poitou@gmail.com',
+   },
+   password: {
+      type: 'string',
+      required: true,
+      example: 'aL0ngP@ssword!',
+   },
 };
