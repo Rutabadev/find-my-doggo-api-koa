@@ -47,6 +47,7 @@
       "@types/koa__cors": "^3.0.1",
       "@types/koa__router": "^8.0.2",
       "@types/node": "^12.12.6",
+      "@types/nuxtjs__auth": "^4.8.5",
       "@types/shelljs": "^0.8.7",
       "@typescript-eslint/eslint-plugin": "^2.27.0",
       "@typescript-eslint/parser": "^2.27.0",

@@ -46,4 +46,9 @@ export const loginSchema = {
       required: true,
       example: 'Gilles Poitou',
    },
+   password: {
+      type: 'string',
+      required: true,
+      example: 'aL0ngP@ssword!',
+   },
 };

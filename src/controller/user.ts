@@ -26,11 +26,18 @@ export default class UserController {
    @body(loginSchema)
    public static async login(ctx: BaseContext): Promise<void> {
       const errors: ParamError[] = [];
-      const usernameOrEmail = ctx?.request?.body.usernameOrEmail;
+      const { usernameOrEmail, password } = ctx?.request?.body;
       if (!usernameOrEmail) {
          errors.push({
             field: 'usernameOrEmail',
             message: 'usernameOrEmail is required',
+         });
+      }
+
+      if (!password) {
+         errors.push({
+            field: 'password',
+            message: 'password is required',
          });
       }
 
@@ -45,7 +52,9 @@ export default class UserController {
          where: [{ name: usernameOrEmail }, { email: usernameOrEmail }],
       });
 
-      if (!user) {
+      if (!user || user.password !== password) {
+         ctx.status = 400;
+         ctx.body = 'Invalid password';
          return;
       }
 
@@ -57,7 +66,7 @@ export default class UserController {
          config.jwtSecret
       );
       ctx.status = 200;
-      ctx.body = { user, jwt };
+      ctx.body = { jwt };
    }
 
    @request('get', '/users/me')
@@ -66,7 +75,8 @@ export default class UserController {
       const jwt = ctx.request.header.authorization.match(/Bearer (.*)/)[1];
       const uid = (jsonWebToken.decode(jwt) as any).uid;
       const userRepository: Repository<User> = getManager().getRepository(User);
-      ctx.body = await userRepository.findOne(uid);
+      const { password, ...user } = await userRepository.findOne(uid);
+      ctx.body = user;
    }
 
    @request('get', '/users')
