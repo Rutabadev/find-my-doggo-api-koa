@@ -49,7 +49,13 @@ export default class UserController {
          return;
       }
 
-      const jwt = jsonWebToken.sign({ uid: user.id }, config.jwtSecret);
+      const jwt = jsonWebToken.sign(
+         {
+            uid: user.id,
+            exp: Math.floor(Date.now() / 1000) + config.jwtExpiration,
+         },
+         config.jwtSecret
+      );
       ctx.status = 200;
       ctx.body = { user, jwt };
    }
