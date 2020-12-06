@@ -12,6 +12,7 @@ import { config } from './config';
 import { unprotectedRouter } from './unprotectedRoutes';
 import { protectedRouter } from './protectedRoutes';
 import { cron } from './cron';
+import path from 'path';
 
 // create connection with database
 // note that its not active database connection
@@ -22,6 +23,7 @@ createConnection({
    synchronize: true,
    logging: false,
    entities: config.dbEntitiesPath,
+   migrations: [path.join(__dirname, './migration/*')],
    extra: {
       ssl: config.dbsslconn, // if not development, will use SSL
    },
