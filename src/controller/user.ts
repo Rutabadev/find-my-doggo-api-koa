@@ -10,7 +10,7 @@ import {
    tagsAll,
 } from 'koa-swagger-decorator';
 import { User, userSchema, loginSchema } from '../entity/user';
-import { ParamError } from '../types';
+import { ParamError, UserNoPassword } from '../types';
 import jsonWebToken from 'jsonwebtoken';
 import { config } from '../config';
 
@@ -86,7 +86,9 @@ export default class UserController {
       const userRepository: Repository<User> = getManager().getRepository(User);
 
       // load all users
-      const users: User[] = await userRepository.find();
+      const users: UserNoPassword[] = (await userRepository.find()).map(
+         ({ password, ...user }) => user
+      );
 
       // return OK status code and loaded users array
       ctx.status = 200;
