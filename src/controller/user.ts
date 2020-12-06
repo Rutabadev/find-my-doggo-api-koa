@@ -13,6 +13,7 @@ import { User, userSchema, loginSchema } from '../entity/user';
 import { ParamError, UserNoPassword } from '../types';
 import jsonWebToken from 'jsonwebtoken';
 import { config } from '../config';
+import argon2 from 'argon2';
 
 @responsesAll({
    200: { description: 'success' },
@@ -52,7 +53,7 @@ export default class UserController {
          where: [{ name: usernameOrEmail }, { email: usernameOrEmail }],
       });
 
-      if (!user || user.password !== password) {
+      if (!user || !(await argon2.verify(user.password, password))) {
          ctx.status = 400;
          ctx.body = 'Invalid password';
          return;
@@ -75,7 +76,7 @@ export default class UserController {
       const jwt = ctx.request.header.authorization.match(/Bearer (.*)/)[1];
       const uid = (jsonWebToken.decode(jwt) as any).uid;
       const userRepository: Repository<User> = getManager().getRepository(User);
-      const { password, ...user } = await userRepository.findOne(uid);
+      const { password, ...user } = (await userRepository.findOne(uid)) || {};
       ctx.body = user;
    }
 
@@ -134,7 +135,7 @@ export default class UserController {
       const userToBeSaved: User = new User();
       userToBeSaved.name = ctx.request.body.name;
       userToBeSaved.email = ctx.request.body.email;
-      userToBeSaved.password = ctx.request.body.password;
+      userToBeSaved.password = await argon2.hash(ctx.request.body.password);
 
       // validate user entity
       const validationErrors = await validate(userToBeSaved);
