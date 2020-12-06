@@ -105,9 +105,10 @@ export default class UserController {
       const userRepository: Repository<User> = getManager().getRepository(User);
 
       // load user by id
-      const user: User | undefined = await userRepository.findOne(
-         +ctx.params.id || 0
-      );
+      const {
+         password,
+         ...user
+      }: User | undefined = await userRepository.findOne(+ctx.params.id || 0);
 
       if (user) {
          // return OK status code and loaded user object
