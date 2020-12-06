@@ -17,7 +17,7 @@ protectedRouter.swagger({
    title: 'Find My Doggo API',
    description:
       'API REST using NodeJS and KOA framework, typescript. TypeORM for SQL with class-validators. Middlewares JWT, CORS, Winston Logger.',
-   version: '1.5.0',
+   version: '0.0.1',
 });
 
 // mapDir will scan the input dir, and automatically call router.map to all Router Class
