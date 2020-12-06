@@ -1,6 +1,12 @@
 name: CI
 
 on:
+   workflow_dispatch:
+      tags:
+         description: 'Test scenario tags'
+   push:
+      branches:
+         - main
    pull_request:
       branches:
          - main
