@@ -4,7 +4,7 @@ import bodyParser from 'koa-bodyparser';
 import helmet from 'koa-helmet';
 import cors from '@koa/cors';
 import winston from 'winston';
-import { createConnection } from 'typeorm';
+import { createConnection, getManager } from 'typeorm';
 import 'reflect-metadata';
 
 import { logger } from './logger';
@@ -13,6 +13,9 @@ import { unprotectedRouter } from './unprotectedRoutes';
 import { protectedRouter } from './protectedRoutes';
 import { cron } from './cron';
 import path from 'path';
+import { User } from './entity/user';
+import { Role } from './entity/role';
+import argon2 from 'argon2';
 
 // create connection with database
 // note that its not active database connection
@@ -30,6 +33,23 @@ createConnection({
 })
    .then(async () => {
       const app = new Koa();
+
+      // TODO: remove migration
+      await getManager().delete(Role, {});
+      await getManager().delete(User, {});
+
+      const adminRole = new Role();
+      adminRole.value = 'admin';
+      await getManager().getRepository(Role).save(adminRole);
+
+      const user = new User();
+      const role = await getManager()
+         .getRepository(Role)
+         .findOne({ value: 'admin' });
+      user.roles = [role];
+      user.name = 'bob';
+      user.password = await argon2.hash('bob');
+      getManager().getRepository(User).save(user);
 
       // Provides important security headers to make your app more secure
       app.use(helmet());

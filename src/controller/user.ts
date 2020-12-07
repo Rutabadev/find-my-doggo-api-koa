@@ -1,5 +1,5 @@
 import { BaseContext } from 'koa';
-import { getManager, Repository, Not, Equal, Like } from 'typeorm';
+import { getManager, Repository, Not, Equal, Like, In } from 'typeorm';
 import { validate, ValidationError } from 'class-validator';
 import {
    request,
@@ -10,6 +10,7 @@ import {
    tagsAll,
 } from 'koa-swagger-decorator';
 import { User, userSchema, loginSchema } from '../entity/user';
+import { Role } from '../entity/role';
 import { ParamError, UserNoPassword } from '../types';
 import jsonWebToken from 'jsonwebtoken';
 import { config } from '../config';
@@ -75,7 +76,9 @@ export default class UserController {
    public static async getMe(ctx: BaseContext): Promise<void> {
       const userRepository: Repository<User> = getManager().getRepository(User);
       const { password, ...user } =
-         (await userRepository.findOne(ctx.state.user.uid)) || {};
+         (await userRepository.findOne(ctx.state.user.uid, {
+            relations: ['roles'],
+         })) || {};
       ctx.body = user;
    }
 
@@ -86,9 +89,9 @@ export default class UserController {
       const userRepository: Repository<User> = getManager().getRepository(User);
 
       // load all users
-      const users: UserNoPassword[] = (await userRepository.find()).map(
-         ({ password, ...user }) => user
-      );
+      const users: UserNoPassword[] = (
+         await userRepository.find({ relations: ['roles'] })
+      ).map(({ password, ...user }) => user);
 
       // return OK status code and loaded users array
       ctx.status = 200;
@@ -128,14 +131,39 @@ export default class UserController {
    public static async createUser(ctx: BaseContext): Promise<void> {
       // get a user repository to perform operations with user
       const userRepository: Repository<User> = getManager().getRepository(User);
-      const { name, email, password } = ctx.request.body;
+      const { name, email, password, roles } = ctx.request.body;
       const errors: ParamError[] = [];
+
+      const roleRepository: Repository<Role> = getManager().getRepository(Role);
+      try {
+         roleRepository.save({ value: 'admin' });
+      } catch (err) {
+         console.log('not recreating');
+      }
+
+      if (roles && !Array.isArray(roles)) {
+         ctx.status = 400;
+         ctx.body = {
+            errors: [
+               {
+                  field: 'roles',
+                  message: 'roles must be an array',
+               },
+            ],
+         };
+         return;
+      }
 
       // build up entity user to be saved
       const userToBeSaved: User = new User();
       userToBeSaved.name = name;
       email && (userToBeSaved.email = email);
       userToBeSaved.password = password;
+      if (roles) {
+         userToBeSaved.roles = await getManager()
+            .getRepository(Role)
+            .find({ value: In(roles as string[]) });
+      }
 
       // validate user entity
       const validationErrors = await validate(userToBeSaved);
@@ -235,12 +263,17 @@ export default class UserController {
       const userToRemove: User | undefined = await userRepository.findOne(
          +ctx.params.id || 0
       );
-      const user = await userRepository.findOne(ctx.state.user.uid);
+      const user = await userRepository.findOne(ctx.state.user.uid, {
+         relations: ['roles'],
+      });
       if (!userToRemove) {
          // return a BAD REQUEST status code and error message
          ctx.status = 400;
          ctx.body = "The user you are trying to delete doesn't exist in the db";
-      } else if (user.name !== userToRemove.name) {
+      } else if (
+         user.name !== userToRemove.name &&
+         user?.roles?.map((role) => role.value).includes('admin') !== true
+      ) {
          // check user's token id and user id are the same
          // if not, return a FORBIDDEN status code and error message
          ctx.status = 403;

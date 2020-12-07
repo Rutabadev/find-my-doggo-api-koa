@@ -1,5 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import {
+   Entity,
+   Column,
+   PrimaryGeneratedColumn,
+   Unique,
+   ManyToMany,
+   JoinTable,
+} from 'typeorm';
 import { Length, IsEmail, IsOptional } from 'class-validator';
+import { Role } from './role';
 
 @Entity()
 @Unique(['name'])
@@ -26,6 +34,10 @@ export class User {
    @Column()
    @Length(1)
    password: string;
+
+   @ManyToMany(() => Role)
+   @JoinTable()
+   roles: Role[];
 }
 
 export const userSchema = {
