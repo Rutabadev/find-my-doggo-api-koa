@@ -9,8 +9,7 @@ import {
    responsesAll,
    tagsAll,
 } from 'koa-swagger-decorator';
-import { User, userSchema, loginSchema } from '../entity/user';
-import { Role } from '../entity/role';
+import { User, userSchema, loginSchema, Role } from '../entity';
 import { ParamError, UserNoPassword } from '../types';
 import jsonWebToken from 'jsonwebtoken';
 import { config } from '../config';
