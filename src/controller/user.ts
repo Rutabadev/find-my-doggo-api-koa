@@ -73,10 +73,9 @@ export default class UserController {
    @request('get', '/users/me')
    @summary('Get the currently logged in user info')
    public static async getMe(ctx: BaseContext): Promise<void> {
-      const jwt = ctx.request.header.authorization.match(/Bearer (.*)/)[1];
-      const uid = (jsonWebToken.decode(jwt) as any).uid;
       const userRepository: Repository<User> = getManager().getRepository(User);
-      const { password, ...user } = (await userRepository.findOne(uid)) || {};
+      const { password, ...user } =
+         (await userRepository.findOne(ctx.state.user.uid)) || {};
       ctx.body = user;
    }
 
@@ -233,16 +232,12 @@ export default class UserController {
       const userToRemove: User | undefined = await userRepository.findOne(
          +ctx.params.id || 0
       );
+      const user = await userRepository.findOne(ctx.state.user.uid);
       if (!userToRemove) {
          // return a BAD REQUEST status code and error message
          ctx.status = 400;
          ctx.body = "The user you are trying to delete doesn't exist in the db";
-      } else if (
-         !(
-            ctx.state.user.email === userToRemove.email ||
-            ctx.state.user.name === userToRemove.name
-         )
-      ) {
+      } else if (user.name !== userToRemove.name) {
          // check user's token id and user id are the same
          // if not, return a FORBIDDEN status code and error message
          ctx.status = 403;
