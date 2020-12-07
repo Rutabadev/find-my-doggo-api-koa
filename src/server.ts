@@ -9,7 +9,6 @@ import { createConnection } from 'typeorm';
 import winston from 'winston';
 import { config } from './config';
 import { cron } from './cron';
-import { reset } from './custom_migration/reset';
 import { logger } from './logger';
 import { protectedRouter } from './protectedRoutes';
 import { unprotectedRouter } from './unprotectedRoutes';
