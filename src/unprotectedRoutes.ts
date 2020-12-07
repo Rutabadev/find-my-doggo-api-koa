@@ -8,5 +8,6 @@ unprotectedRouter.get('/', general.helloWorld);
 
 // User routes
 unprotectedRouter.post('/users/login', user.login);
+unprotectedRouter.post('/users', user.createUser);
 
 export { unprotectedRouter };

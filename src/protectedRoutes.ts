@@ -7,7 +7,6 @@ const protectedRouter = new SwaggerRouter();
 protectedRouter.get('/users/me', user.getMe);
 protectedRouter.get('/users', user.getUsers);
 protectedRouter.get('/users/:id', user.getUser);
-protectedRouter.post('/users', user.createUser);
 protectedRouter.put('/users/:id', user.updateUser);
 protectedRouter.delete('/users/:id', user.deleteUser);
 protectedRouter.delete('/testusers', user.deleteTestUsers);

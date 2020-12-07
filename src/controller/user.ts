@@ -129,13 +129,14 @@ export default class UserController {
    public static async createUser(ctx: BaseContext): Promise<void> {
       // get a user repository to perform operations with user
       const userRepository: Repository<User> = getManager().getRepository(User);
+      const { name, email, password } = ctx.request.body;
       const errors: ParamError[] = [];
 
       // build up entity user to be saved
       const userToBeSaved: User = new User();
-      userToBeSaved.name = ctx.request.body.name;
-      userToBeSaved.email = ctx.request.body.email;
-      userToBeSaved.password = await argon2.hash(ctx.request.body.password);
+      userToBeSaved.name = name;
+      email && (userToBeSaved.email = email);
+      userToBeSaved.password = await argon2.hash(password);
 
       // validate user entity
       const validationErrors = await validate(userToBeSaved);
