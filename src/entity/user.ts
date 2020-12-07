@@ -24,6 +24,7 @@ export class User {
    email: string;
 
    @Column()
+   @Length(1)
    password: string;
 }
 

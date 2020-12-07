@@ -135,14 +135,16 @@ export default class UserController {
       const userToBeSaved: User = new User();
       userToBeSaved.name = name;
       email && (userToBeSaved.email = email);
-      userToBeSaved.password = await argon2.hash(password);
+      userToBeSaved.password = password;
 
       // validate user entity
       const validationErrors = await validate(userToBeSaved);
       validationErrors.forEach((err) =>
-         errors.push({
-            field: err.property,
-            message: Object.values(err.constraints).join('. '),
+         Object.values(err.constraints).forEach((constraint: string) => {
+            errors.push({
+               field: err.property,
+               message: constraint,
+            });
          })
       );
 
@@ -165,6 +167,7 @@ export default class UserController {
          return;
       }
 
+      userToBeSaved.password = await argon2.hash(password);
       // save the user contained in the POST body
       const user = await userRepository.save(userToBeSaved);
       // return CREATED status code and updated user
