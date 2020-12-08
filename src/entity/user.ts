@@ -51,6 +51,10 @@ export const userSchema = {
       required: true,
       example: 'aL0ngP@ssword!',
    },
+   roles: {
+      type: 'array',
+      items: { type: 'string', example: 'admin' },
+   },
 };
 
 export const loginSchema = {

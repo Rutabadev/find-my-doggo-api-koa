@@ -94,7 +94,7 @@ export default class UserController {
       // get a user repository to perform operations with user
       const userRepository: Repository<User> = getManager().getRepository(User);
 
-      // load all users
+      // load all users and their roles
       const users: User[] = await userRepository.find({ relations: ['roles'] });
 
       // return OK status code and loaded users array
@@ -134,38 +134,24 @@ export default class UserController {
    public static async createUser(ctx: BaseContext): Promise<void> {
       // get a user repository to perform operations with user
       const userRepository: Repository<User> = getManager().getRepository(User);
-      const { name, email, password, roles } = ctx.request.body;
+      const { password, roles } = ctx.request.body;
       const errors: ParamError[] = [];
 
-      const roleRepository: Repository<Role> = getManager().getRepository(Role);
-      try {
-         roleRepository.save({ value: 'admin' });
-      } catch (err) {
-         console.log('not recreating');
-      }
-
-      if (roles && !Array.isArray(roles)) {
-         ctx.status = 400;
-         ctx.body = {
-            errors: [
-               {
-                  field: 'roles',
-                  message: 'roles must be an array',
-               },
-            ],
-         };
-         return;
-      }
-
       // build up entity user to be saved
-      const userToBeSaved: User = new User();
-      userToBeSaved.name = name;
-      email && (userToBeSaved.email = email);
-      userToBeSaved.password = password;
-      if (roles) {
-         userToBeSaved.roles = await getManager()
-            .getRepository(Role)
-            .find({ value: In(roles as string[]) });
+      const userToBeSaved: User = { ...new User(), ...ctx.request.body };
+
+      try {
+         if (roles.length) {
+            userToBeSaved.roles = await getManager()
+               .getRepository(Role)
+               .find({ value: In(roles as string[]) });
+         }
+      } catch (err) {
+         errors.push({
+            field: 'roles',
+            message: 'roles must be an array of strings',
+         });
+         userToBeSaved.roles = [];
       }
 
       // validate user entity
@@ -215,18 +201,45 @@ export default class UserController {
    public static async updateUser(ctx: BaseContext): Promise<void> {
       // get a user repository to perform operations with user
       const userRepository: Repository<User> = getManager().getRepository(User);
+      const { roles } = ctx.request.body;
+      const errors: ParamError[] = [];
 
       // update the user by specified id
       // build up entity user to be updated
-      const userToBeUpdated: User = new User();
-      userToBeUpdated.id = +ctx.params.id || 0; // will always have a number, this will avoid errors
-      userToBeUpdated.name = ctx.request.body.name;
-      userToBeUpdated.email = ctx.request.body.email;
+      const userToBeUpdated: User = {
+         ...new User(),
+         ...ctx.request.body,
+         id: +ctx.params.id || 0, // will always have a number, this will avoid errors
+      };
+
+      try {
+         if (roles.length) {
+            userToBeUpdated.roles = await getManager()
+               .getRepository(Role)
+               .find({ value: In(roles as string[]) });
+         }
+      } catch (err) {
+         errors.push({
+            field: 'roles',
+            message: 'roles must be an array of strings',
+         });
+         userToBeUpdated.roles = [];
+      }
 
       // validate user entity
-      const errors: ValidationError[] = await validate(userToBeUpdated); // errors is an array of validation errors
+      const validationErrors: ValidationError[] = await validate(
+         userToBeUpdated
+      );
+      validationErrors.forEach((err) =>
+         Object.values(err.constraints).forEach((constraint: string) => {
+            errors.push({
+               field: err.property,
+               message: constraint,
+            });
+         })
+      );
 
-      if (errors.length > 0) {
+      if (errors.length) {
          // return BAD REQUEST status code and errors array
          ctx.status = 400;
          ctx.body = errors;
