@@ -140,18 +140,18 @@ export default class UserController {
       // build up entity user to be saved
       const userToBeSaved: User = { ...new User(), ...ctx.request.body };
 
-      try {
-         if (roles.length) {
+      if (roles?.length) {
+         try {
             userToBeSaved.roles = await getManager()
                .getRepository(Role)
                .find({ value: In(roles as string[]) });
+         } catch (err) {
+            errors.push({
+               field: 'roles',
+               message: 'roles must be an array of strings',
+            });
+            userToBeSaved.roles = [];
          }
-      } catch (err) {
-         errors.push({
-            field: 'roles',
-            message: 'roles must be an array of strings',
-         });
-         userToBeSaved.roles = [];
       }
 
       // validate user entity
