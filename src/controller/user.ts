@@ -10,7 +10,7 @@ import {
    tagsAll,
 } from 'koa-swagger-decorator';
 import { User, userSchema, loginSchema, Role } from '../entity';
-import { ParamError, UserNoPassword } from '../types';
+import { ParamError } from '../types';
 import jsonWebToken from 'jsonwebtoken';
 import { config } from '../config';
 import argon2 from 'argon2';
@@ -49,9 +49,14 @@ export default class UserController {
       }
 
       const userRepository = getManager().getRepository(User);
-      const user = await userRepository.findOne({
-         where: [{ name: usernameOrEmail }, { email: usernameOrEmail }],
-      });
+      // Using a specific "addSelect" to return password declared as not selectable
+      const user = await userRepository
+         .createQueryBuilder('user')
+         .select('user.id')
+         .addSelect('user.password')
+         .where('user.name = :name', { name: usernameOrEmail })
+         .orWhere('user.email = :email', { email: usernameOrEmail })
+         .getOne();
 
       if (!user || !(await argon2.verify(user.password, password))) {
          ctx.status = 400;
@@ -74,10 +79,12 @@ export default class UserController {
    @summary('Get the currently logged in user info')
    public static async getMe(ctx: BaseContext): Promise<void> {
       const userRepository: Repository<User> = getManager().getRepository(User);
-      const { password, ...user } =
-         (await userRepository.findOne(ctx.state.user.uid, {
-            relations: ['roles'],
-         })) || {};
+      const user = await userRepository.findOne(ctx.state.user.uid, {
+         relations: ['roles'],
+      });
+      if (!user) {
+         return;
+      }
       ctx.body = user;
    }
 
@@ -88,9 +95,7 @@ export default class UserController {
       const userRepository: Repository<User> = getManager().getRepository(User);
 
       // load all users
-      const users: UserNoPassword[] = (
-         await userRepository.find({ relations: ['roles'] })
-      ).map(({ password, ...user }) => user);
+      const users: User[] = await userRepository.find({ relations: ['roles'] });
 
       // return OK status code and loaded users array
       ctx.status = 200;
@@ -107,21 +112,20 @@ export default class UserController {
       const userRepository: Repository<User> = getManager().getRepository(User);
 
       // load user by id
-      const {
-         password,
-         ...user
-      }: User | undefined = await userRepository.findOne(+ctx.params.id || 0);
+      const user: User | undefined = await userRepository.findOne(
+         +ctx.params.id || 0
+      );
 
-      if (user) {
-         // return OK status code and loaded user object
-         ctx.status = 200;
-         ctx.body = user;
-      } else {
+      if (!user) {
          // return a BAD REQUEST status code and error message
          ctx.status = 400;
          ctx.body =
             "The user you are trying to retrieve doesn't exist in the db";
       }
+
+      // return OK status code and loaded user object
+      ctx.status = 200;
+      ctx.body = user;
    }
 
    @request('post', '/users')

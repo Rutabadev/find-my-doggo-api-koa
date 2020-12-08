@@ -31,7 +31,7 @@ export class User {
    @IsOptional()
    email: string;
 
-   @Column()
+   @Column({ select: false })
    @Length(1)
    password: string;
 
