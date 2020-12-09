@@ -14,13 +14,13 @@ import { Role } from './role';
 @Unique(['email'])
 export class User {
    @PrimaryGeneratedColumn()
-   id: number;
+   id!: number;
 
    @Column({
       length: 80,
    })
    @Length(1, 80)
-   name: string;
+   name!: string;
 
    @Column({
       length: 100,
@@ -29,15 +29,15 @@ export class User {
    @Length(10, 100)
    @IsEmail()
    @IsOptional()
-   email: string;
+   email?: string;
 
    @Column({ select: false })
    @Length(1)
-   password: string;
+   password!: string;
 
    @ManyToMany(() => Role)
    @JoinTable()
-   roles: Role[];
+   roles?: Role[];
 }
 
 export const userSchema = {

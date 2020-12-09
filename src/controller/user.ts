@@ -138,7 +138,9 @@ export default class UserController {
       const errors: ParamError[] = [];
 
       // build up entity user to be saved
-      const userToBeSaved: User = { ...new User(), ...ctx.request.body };
+      const userToBeSaved = (userRepository.create(
+         ctx.request.body
+      ) as unknown) as User;
 
       if (roles?.length) {
          try {
@@ -206,11 +208,10 @@ export default class UserController {
 
       // update the user by specified id
       // build up entity user to be updated
-      const userToBeUpdated: User = {
-         ...new User(),
+      const userToBeUpdated = (userRepository.create({
          ...ctx.request.body,
          id: +ctx.params.id || 0, // will always have a number, this will avoid errors
-      };
+      }) as unknown) as User;
 
       try {
          if (roles.length) {
