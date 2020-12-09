@@ -1,6 +1,6 @@
 {
    "name": "find-my-doggo",
-   "version": "0.1.2",
+   "version": "0.1.3",
    "description": "API REST using NodeJS and KOA framework, typescript. TypeORM for SQL with class-validators. Middlewares JWT, CORS, Winston Logger. Swagger API docs",
    "main": "dist/server.js",
    "scripts": {
