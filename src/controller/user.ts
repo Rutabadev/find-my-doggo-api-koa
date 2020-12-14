@@ -31,7 +31,7 @@ export default class UserController {
       if (!usernameOrEmail) {
          errors.push({
             field: 'usernameOrEmail',
-            message: 'username or Email is required',
+            message: 'username or email is required',
          });
       }
 
