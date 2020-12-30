@@ -4,16 +4,17 @@ RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
 WORKDIR /home/node/app
 
-COPY package*.json ./
+COPY package.json yarn.lock ./
 
 USER node
 
-RUN npm install
+# ~ equivalent to npm ci
+RUN yarn install --frozen-lockfile
 
 COPY --chown=node:node . .
 
-RUN npm run build
+RUN yarn build
 
 EXPOSE 3001
 
-CMD [ "npm", "run", "start" ]
+CMD [ "yarn", "start" ]
