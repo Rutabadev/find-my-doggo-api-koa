@@ -31,7 +31,7 @@ export default class UserController {
       if (!usernameOrEmail) {
          errors.push({
             field: 'usernameOrEmail',
-            message: 'usernameOrEmail is required',
+            message: 'username or email is required',
          });
       }
 
@@ -187,11 +187,16 @@ export default class UserController {
       }
 
       userToBeSaved.password = await argon2.hash(password);
-      // save the user contained in the POST body
-      const user = await userRepository.save(userToBeSaved);
-      // return CREATED status code and updated user
-      ctx.status = 201;
-      ctx.body = user;
+      try {
+         // save the user contained in the POST body
+         const user = await userRepository.save(userToBeSaved);
+         // return CREATED status code and updated user
+         ctx.status = 201;
+         ctx.body = user;
+      } catch (err) {
+         ctx.status = 400;
+         ctx.body = err.detail || 'Error saving user';
+      }
    }
 
    @request('put', '/users/{id}')
@@ -201,17 +206,26 @@ export default class UserController {
    })
    @body(userSchema)
    public static async updateUser(ctx: BaseContext): Promise<void> {
+      if (!ctx.params.id) {
+         ctx.status = 400;
+         ctx.body = { error: 'Id is required' };
+         return;
+      }
+
       // get a user repository to perform operations with user
       const userRepository: Repository<User> = getManager().getRepository(User);
       const { roles } = ctx.request.body;
       const errors: ParamError[] = [];
 
+      // Get the user to update
+      let userToBeUpdated = await userRepository.findOne(+ctx.params.id);
+
       // update the user by specified id
       // build up entity user to be updated
-      const userToBeUpdated = (userRepository.create({
+      userToBeUpdated = {
+         ...userToBeUpdated,
          ...ctx.request.body,
-         id: +ctx.params.id || 0, // will always have a number, this will avoid errors
-      }) as unknown) as User;
+      };
 
       try {
          if (roles.length) {
@@ -260,10 +274,15 @@ export default class UserController {
          ctx.body = 'The specified e-mail address already exists';
       } else {
          // save the user contained in the PUT body
-         const user = await userRepository.save(userToBeUpdated);
-         // return CREATED status code and updated user
-         ctx.status = 201;
-         ctx.body = user;
+         try {
+            const user = await userRepository.save(userToBeUpdated);
+            // return CREATED status code and updated user
+            ctx.status = 201;
+            ctx.body = user;
+         } catch (err) {
+            ctx.status = 400;
+            ctx.body = err?.detail || 'User saving error';
+         }
       }
    }
 
