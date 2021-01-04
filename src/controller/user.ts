@@ -264,10 +264,11 @@ export default class UserController {
          ctx.status = 400;
          ctx.body = "The user you are trying to update doesn't exist in the db";
       } else if (
-         await userRepository.findOne({
+         userToBeUpdated.email &&
+         (await userRepository.findOne({
             id: Not(Equal(userToBeUpdated.id)),
             email: userToBeUpdated.email,
-         })
+         }))
       ) {
          // return BAD REQUEST status code and email already exists error
          ctx.status = 400;
