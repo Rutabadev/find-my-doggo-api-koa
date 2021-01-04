@@ -274,6 +274,11 @@ export default class UserController {
          ctx.status = 400;
          ctx.body = 'The specified e-mail address already exists';
       } else {
+         if (userToBeUpdated.password) {
+            userToBeUpdated.password = await argon2.hash(
+               userToBeUpdated.password
+            );
+         }
          // save the user contained in the PUT body
          try {
             const user = await userRepository.save(userToBeUpdated);
