@@ -19,7 +19,7 @@ import { unprotectedRouter } from './unprotectedRoutes';
 createConnection({
    type: 'postgres',
    url: config.databaseUrl,
-   synchronize: true,
+   synchronize: process.env.NODE_ENV !== 'production',
    logging: false,
    entities: config.dbEntitiesPath,
    migrations: [path.join(__dirname, './migration/*')],
