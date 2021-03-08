@@ -35,9 +35,12 @@ jobs:
               HEROKU_APP: ${{ secrets.HEROKU_APP }}
            run: docker build -t $HEROKU_APP .
          - name: Login into Heroku
-           uses: actions/heroku@master
+         - uses: actions/heroku@master
            with:
               args: container:login
+         - uses: actions/setup-node@v1
+           with:
+              node-version: '12.x'
            env:
               HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
               HEROKU_APP: ${{ secrets.HEROKU_APP }}
