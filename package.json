@@ -16,10 +16,6 @@
       "test:integration:local": "newman run integrationtests/node-koa-typescript.postman_collection.json -e integrationtests/env/local-dev.postman_environment.json",
       "test:load": "locust --no-web -c 50 -r 10 -f loadtests/locustfile.py --run-time 1m --host=https://node-typescript-koa-rest.herokuapp.com"
    },
-   "engines": {
-      "node": "12.x.x",
-      "npm": "6.x.x"
-   },
    "author": "Javier Aviles",
    "license": "MIT",
    "homepage": "https://github.com/javieraviles/node-typescript-koa-rest#readme",
