@@ -79,9 +79,10 @@ export default class UserController {
    @summary('Get the currently logged in user info')
    public static async getMe(ctx: BaseContext): Promise<void> {
       const userRepository: Repository<User> = getManager().getRepository(User);
-      const user = await userRepository.findOne(ctx.state.user.uid, {
+      const user: any = await userRepository.findOne(ctx.state.user.uid, {
          relations: ['roles'],
       });
+      user.roles = user.roles.map((role: Role) => role.value);
       if (!user) {
          return;
       }
