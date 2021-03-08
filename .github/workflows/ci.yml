@@ -30,6 +30,9 @@ jobs:
       needs: build
       steps:
          - uses: actions/checkout@master
+         - uses: actions/setup-node@v1
+           with:
+              node-version: '12.x'
          - name: Build docker image
            env:
               HEROKU_APP: ${{ secrets.HEROKU_APP }}
